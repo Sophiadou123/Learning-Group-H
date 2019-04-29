@@ -1,0 +1,60 @@
+---
+title: "Learning Group Project H"
+author: "Jingtong Dou"
+date: "4/23/2019"
+output:
+  html_notebook:
+    df_print: paged
+---
+## Description
+A researcher at the University of South Carolina was interested in exploring the effects of socioeconomic status (SES) on education. SES encompasses not just income but also educational attainment, financial security, and subjective perceptions of social status and social capital. The study used the hsb2 dataset of two hundred observations randomly sampled from the 2005 High School and Beyond survey, a national survey of high school seniors. The research question is: How do school type and socioeconomic status relate to students’ reading scores? 
+
+# Analysis 
+First, let us prepare the data set. 
+```{r}
+library(tidyverse)
+
+hsb2 <- read_csv("hsb2.csv")
+
+# Change school type, SES to factors. 
+hsb2$ses <-factor(hsb2$ses, labels = c("low", "middle", "high"))
+hsb2$schtyp <- factor(hsb2$schtyp, labels = c("public", "private"))
+```
+Next, I'll draw two graphs. I want to see the differences of students reading scores
+among school types by SES. 
+```{r}
+ggplot(hsb2, aes(ses, read, fill= schtyp))+
+  geom_boxplot() +
+  labs(title = "Students Reading Scores among School Type by SES")
+```
+Here' the five-number summary. Let's caculate the mean and sd. 
+```{r}
+tapply(hsb2$read, hsb2$ses, mean)
+tapply(hsb2$read, hsb2$ses, sd)
+
+tapply(hsb2$read, hsb2$schtyp, mean)
+tapply(hsb2$read, hsb2$schtyp, sd)
+```
+Then, I conducted a model for possible interaction between SES and the school type.  
+```{r}
+# interaction.plot
+interaction.plot(hsb2$ses,
+                 hsb2$schtyp,
+                 response = hsb2$read,
+                 xlab = "SES Level",
+                 ylab = "Mean Read Scores",
+                 trace.label = "School Type")
+```
+I will build a model to test how reading scores vary in SES and school types. 
+```{r}
+model <- aov(hsb2$read ~ hsb2$schtyp*hsb2$ses)
+result <- summary(model)
+result
+```
+Conduct a Post-hoc analysis 
+```{r}
+TukeyHSD(aov(hsb2$read~ hsb2$ses))
+```
+# Conclusion 
+
+The researcher explored the relation between school type and SES to students’ reading scores. The sample data suggests that higher SES level is associated with higher reading scores and students in private schools tend to score higher.The interaction plot indicates the possible interaction between the SES and the school type for reading scores.The researcher then ran a two-way ANOVA to test the effects of school type and SES to students’ reading scores. The p-value for the interaction of SES and school type is 0.57, which indicates little interaction effect. Furthermore, the p-value for SES is 0.000204, which is stable enough to illustrate the SES is related to students’ reading scores, but we could not conclude which level of SES effects reading scores most. To explore even further, the researcher conducted a post-hoc analysis. The result indicates that SES level, especially students from low SES and high SES effect their reading scores most. 
